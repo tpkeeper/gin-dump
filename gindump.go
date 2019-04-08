@@ -22,26 +22,26 @@ func Dump() gin.HandlerFunc {
 		if ctx.Request.ContentLength > 0 {
 			buf, err := ioutil.ReadAll(ctx.Request.Body)
 			if err != nil {
-				fmt.Printf("[GIN-dump]: read bodyCache err \n %s", err.Error())
+				strB.WriteString(fmt.Sprintf("\nread bodyCache err \n %s", err.Error()))
 				goto DumpRes
 			}
 			rdr := ioutil.NopCloser(bytes.NewBuffer(buf))
 			ctx.Request.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
 
-			switch ctx.Request.Header.Get("Content-Type") {
+			switch strings.Split(ctx.Request.Header.Get("Content-Type"), ";")[0] {
 			case gin.MIMEJSON:
 				var mapReq map[string]interface{}
 				bytes, err := ioutil.ReadAll(rdr)
 				if err != nil {
-					fmt.Printf("[GIN-dump]: read rdr err \n %s", err.Error())
+					strB.WriteString(fmt.Sprintf("\nread rdr err \n %s", err.Error()))
 					goto DumpRes
 				}
 				if err := json.Unmarshal(bytes, &mapReq); err != nil {
-					fmt.Println("[GIN-dump]: parse bodyCache err \n" + err.Error())
+					strB.WriteString(fmt.Sprintf("\nparse bodyCache err \n" + err.Error()))
 					goto DumpRes
 				}
 
-				strB.WriteString("Request-Body:\n")
+				strB.WriteString("\nRequest-Body:\n")
 				strB.WriteString(strMap(mapReq))
 			case gin.MIMEPOSTForm:
 			case gin.MIMEMultipartPOSTForm:
@@ -55,28 +55,25 @@ func Dump() gin.HandlerFunc {
 		ctx.Next()
 
 		//dump res header
-		strB.WriteString("[GIN-dump]:\nResponse-Header:\n")
-		strB.WriteString(strHeader(ctx.Request.Header))
+		strB.WriteString("\nResponse-Header:\n")
+		strB.WriteString(strHeader(ctx.Writer.Header()))
 
-		bw, ok := ctx.Writer.(bodyWriter)
+		bw, ok := ctx.Writer.(*bodyWriter)
 		if !ok {
-			fmt.Printf("[GIN-dump]: bodyWriter was override , can not read bodyCache")
-			return
+			strB.WriteString("\nbodyWriter was override , can not read bodyCache")
+			goto End
 		}
 
 		//dump res body
 		if bodyAllowedForStatus(ctx.Writer.Status()) && bw.bodyCache.Len() > 0 {
-			switch ctx.Writer.Header().Get("Content-Type") {
+			switch strings.Split(ctx.Writer.Header().Get("Content-Type"), ";")[0] {
 			case gin.MIMEJSON:
 				var mapRes map[string]interface{}
 				if err := json.Unmarshal(bw.bodyCache.Bytes(), &mapRes); err != nil {
-					fmt.Println("[GIN-dump]: parse bodyCache err \n" + err.Error())
-					return
+					strB.WriteString(fmt.Sprintf("\nparse bodyCache err \n" + err.Error()))
+					goto End
 				}
-
-				//strB.WriteString("[GIN-dump]:\nHeader:\n")
-				//strB.WriteString(strHeader(ctx.Request.Header))
-				strB.WriteString("Response-Body:\n")
+				strB.WriteString("\nResponse-Body:\n")
 				strB.WriteString(strMap(mapRes))
 
 			case gin.MIMEPOSTForm:
@@ -85,7 +82,7 @@ func Dump() gin.HandlerFunc {
 			default:
 			}
 		}
-
+	End:
 		fmt.Print(strB.String())
 	}
 }
