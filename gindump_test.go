@@ -22,7 +22,7 @@ func performRequest(r http.Handler, method, path string,body io.Reader) *httptes
 	return w
 }
 
-func TestStats(t *testing.T) {
+func TestMIMJSON(t *testing.T) {
 	router := gin.New()
 	router.Use(Dump())
 
