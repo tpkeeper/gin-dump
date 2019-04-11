@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
+	"mime"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -27,16 +29,22 @@ func Dump() gin.HandlerFunc {
 			}
 			rdr := ioutil.NopCloser(bytes.NewBuffer(buf))
 			ctx.Request.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
+			ctGet := ctx.Request.Header.Get("Content-Type")
+			ct, _, err := mime.ParseMediaType(ctGet)
+			if err != nil {
+				strB.WriteString(fmt.Sprintf("\ncontent_type: %s parse err \n %s", ctGet, err.Error()))
+				goto DumpRes
+			}
 
-			switch strings.Split(ctx.Request.Header.Get("Content-Type"), ";")[0] {
+			switch ct {
 			case gin.MIMEJSON:
 				var mapReq map[string]interface{}
-				bytes, err := ioutil.ReadAll(rdr)
+				bts, err := ioutil.ReadAll(rdr)
 				if err != nil {
 					strB.WriteString(fmt.Sprintf("\nread rdr err \n %s", err.Error()))
 					goto DumpRes
 				}
-				if err := json.Unmarshal(bytes, &mapReq); err != nil {
+				if err := json.Unmarshal(bts, &mapReq); err != nil {
 					strB.WriteString(fmt.Sprintf("\nparse bodyCache err \n" + err.Error()))
 					goto DumpRes
 				}
@@ -44,6 +52,20 @@ func Dump() gin.HandlerFunc {
 				strB.WriteString("\nRequest-Body:\n")
 				strB.WriteString(strMap(mapReq))
 			case gin.MIMEPOSTForm:
+				bts, err := ioutil.ReadAll(rdr)
+				if err != nil {
+					strB.WriteString(fmt.Sprintf("\nread rdr err \n %s", err.Error()))
+					goto DumpRes
+				}
+				val, err := url.ParseQuery(string(bts))
+				valMap := (map[string][]string)(val)
+				if err != nil {
+					strB.WriteString(fmt.Sprintf("\nparse formdata err \n %s", err.Error()))
+					goto DumpRes
+				}
+				strB.WriteString("\nRequest-Body:\n")
+				strB.WriteString(strMap(valMap))
+
 			case gin.MIMEMultipartPOSTForm:
 			case gin.MIMEHTML:
 			default:
@@ -66,7 +88,13 @@ func Dump() gin.HandlerFunc {
 
 		//dump res body
 		if bodyAllowedForStatus(ctx.Writer.Status()) && bw.bodyCache.Len() > 0 {
-			switch strings.Split(ctx.Writer.Header().Get("Content-Type"), ";")[0] {
+			ctGet := ctx.Writer.Header().Get("Content-Type")
+			ct, _, err := mime.ParseMediaType(ctGet)
+			if err != nil {
+				strB.WriteString(fmt.Sprintf("\ncontent-type: %s parse  err \n %s", ctGet, err.Error()))
+				goto End
+			}
+			switch ct {
 			case gin.MIMEJSON:
 				var mapRes map[string]interface{}
 				if err := json.Unmarshal(bw.bodyCache.Bytes(), &mapRes); err != nil {
@@ -97,13 +125,26 @@ func strHeader(header http.Header) string {
 	return strB.String()
 }
 
-func strMap(m map[string]interface{}) string {
+func strMap(m interface{}) string {
 	var strB strings.Builder
-	strB.WriteString("	{\n")
-	for key, value := range m {
-		strB.WriteString(fmt.Sprintf("			%s : %s\n", key, value))
+	switch m.(type) {
+	case map[string]interface{}:
+		mInter := m.(map[string]interface{})
+		strB.WriteString("	{\n")
+		for key, value := range mInter {
+			strB.WriteString(fmt.Sprintf("			%s : %s\n", key, value))
+		}
+		strB.WriteString("	}\n")
+		break
+	case map[string][]string:
+		mSl := m.(map[string][]string)
+		strB.WriteString("	{\n")
+		for key, value := range mSl {
+			strB.WriteString(fmt.Sprintf("			%s : %s\n", key, value))
+		}
+		strB.WriteString("	}\n")
+		break
 	}
-	strB.WriteString("	}\n")
 	return strB.String()
 }
 

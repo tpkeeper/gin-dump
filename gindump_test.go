@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -15,14 +17,15 @@ func init() {
 	gin.SetMode(gin.TestMode)
 }
 
-func performRequest(r http.Handler, method, path string,body io.Reader) *httptest.ResponseRecorder {
+func performRequest(r http.Handler, method,contentType string ,path string,body io.Reader) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, body)
+	req.Header.Set("Content-Type",contentType)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	return w
 }
 
-func TestMIMJSON(t *testing.T) {
+func TestMIMEJSON(t *testing.T) {
 	router := gin.New()
 	router.Use(Dump())
 
@@ -50,6 +53,28 @@ func TestMIMJSON(t *testing.T) {
 	}
 
 	body := bytes.NewBuffer(b)
-	performRequest(router, "POST", "/dump",body)
+	performRequest(router, "POST",gin.MIMEJSON ,"/dump",body)
+
+}
+
+func TestMIMEPOSTFORM(t *testing.T) {
+	router := gin.New()
+	router.Use(Dump())
+
+	router.POST("/dump", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"ok":true,
+			"data":"gin-dump",
+		})
+	})
+
+	form := make(url.Values)
+	form.Set("foo", "bar")
+	form.Add("foo", "bar2")
+	form.Set("bar", "baz")
+
+
+	body:=strings.NewReader(form.Encode())
+	performRequest(router, "POST",gin.MIMEPOSTForm ,"/dump",body)
 
 }

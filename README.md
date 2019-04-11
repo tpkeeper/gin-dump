@@ -7,6 +7,7 @@ Very helpful for debugging your applications.
 ## Content-type support / todo
 
 * [x] application/json
+* [x] application/x-www-form-urlencoded
 * [ ] text/xml
 * [ ] application/xml
 * [ ] text/plain
