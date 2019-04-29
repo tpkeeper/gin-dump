@@ -33,6 +33,7 @@ import "github.com/tpkeeper/gin-dump"
 package main
 
 import (
+	"fmt"
 	"time"
 	"github.com/gin-gonic/gin"
 	"github.com/tpkeeper/gin-dump"
@@ -41,7 +42,9 @@ import (
 func main() {
 	router := gin.Default()
 	
-	router.Use(gindump.Dump())
+	router.Use(gindump.Dump(func(dumpStr string) {
+	    fmt.Println(dumpStr)
+	}))
 	//...
 	router.Run()
 }

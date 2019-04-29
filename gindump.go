@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func Dump() gin.HandlerFunc {
+func Dump(cb func(dumpStr string)) gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
 		//dump req header
@@ -104,14 +104,16 @@ func Dump() gin.HandlerFunc {
 				strB.WriteString("\nResponse-Body:\n")
 				strB.WriteString(strMap(mapRes))
 
-			case gin.MIMEPOSTForm:
-			case gin.MIMEMultipartPOSTForm:
 			case gin.MIMEHTML:
 			default:
 			}
 		}
 	End:
-		fmt.Print(strB.String())
+		if cb != nil {
+			cb(strB.String())
+		} else {
+			fmt.Print(strB.String())
+		}
 	}
 }
 
