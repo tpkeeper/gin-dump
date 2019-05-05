@@ -27,7 +27,9 @@ func performRequest(r http.Handler, method,contentType string ,path string,body 
 
 func TestMIMEJSON(t *testing.T) {
 	router := gin.New()
-	router.Use(Dump())
+	router.Use(Dump(func(dumpStr string) {
+		fmt.Println(dumpStr)
+	}))
 
 	router.POST("/dump", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -59,12 +61,17 @@ func TestMIMEJSON(t *testing.T) {
 
 func TestMIMEPOSTFORM(t *testing.T) {
 	router := gin.New()
-	router.Use(Dump())
+	router.Use(Dump(func(dumpStr string) {
+		fmt.Println(dumpStr)
+	}))
 
 	router.POST("/dump", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"ok":true,
-			"data":"gin-dump",
+			"data":map[string]interface{}{
+				"name":"jfise" ,
+				"addr":"tpkeeper@qq.com",
+			},
 		})
 	})
 

@@ -2,7 +2,6 @@ package gindump
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
@@ -17,8 +16,14 @@ func Dump(cb func(dumpStr string)) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//dump req header
 		var strB strings.Builder
-		strB.WriteString("[GIN-dump]:\nRequest-Header:\n")
-		strB.WriteString(strHeader(ctx.Request.Header))
+		s, err := FormatToJson(ctx.Request.Header)
+
+		if err != nil {
+			strB.WriteString(fmt.Sprintf("\nparse req header err \n" + err.Error()))
+		} else {
+			strB.WriteString("[GIN-dump]:\nRequest-Header:\n")
+			strB.WriteString(string(s))
+		}
 
 		//dump req body
 		if ctx.Request.ContentLength > 0 {
@@ -38,19 +43,20 @@ func Dump(cb func(dumpStr string)) gin.HandlerFunc {
 
 			switch ct {
 			case gin.MIMEJSON:
-				var mapReq map[string]interface{}
 				bts, err := ioutil.ReadAll(rdr)
 				if err != nil {
 					strB.WriteString(fmt.Sprintf("\nread rdr err \n %s", err.Error()))
 					goto DumpRes
 				}
-				if err := json.Unmarshal(bts, &mapReq); err != nil {
-					strB.WriteString(fmt.Sprintf("\nparse bodyCache err \n" + err.Error()))
+
+				s, err := FormatJsonBytes(bts)
+				if err != nil {
+					strB.WriteString(fmt.Sprintf("\nparse req body err \n" + err.Error()))
 					goto DumpRes
 				}
 
 				strB.WriteString("\nRequest-Body:\n")
-				strB.WriteString(strMap(mapReq))
+				strB.WriteString(string(s))
 			case gin.MIMEPOSTForm:
 				bts, err := ioutil.ReadAll(rdr)
 				if err != nil {
@@ -58,16 +64,16 @@ func Dump(cb func(dumpStr string)) gin.HandlerFunc {
 					goto DumpRes
 				}
 				val, err := url.ParseQuery(string(bts))
-				valMap := (map[string][]string)(val)
+
+				s, err := FormatToJson(val)
 				if err != nil {
-					strB.WriteString(fmt.Sprintf("\nparse formdata err \n %s", err.Error()))
+					strB.WriteString(fmt.Sprintf("\nparse req body err \n" + err.Error()))
 					goto DumpRes
 				}
 				strB.WriteString("\nRequest-Body:\n")
-				strB.WriteString(strMap(valMap))
+				strB.WriteString(string(s))
 
 			case gin.MIMEMultipartPOSTForm:
-			case gin.MIMEHTML:
 			default:
 			}
 		}
@@ -77,8 +83,13 @@ func Dump(cb func(dumpStr string)) gin.HandlerFunc {
 		ctx.Next()
 
 		//dump res header
-		strB.WriteString("\nResponse-Header:\n")
-		strB.WriteString(strHeader(ctx.Writer.Header()))
+		sHeader, err := FormatToJson(ctx.Writer.Header())
+		if err != nil {
+			strB.WriteString(fmt.Sprintf("\nparse res header err \n" + err.Error()))
+		} else {
+			strB.WriteString("\nResponse-Header:\n")
+			strB.WriteString(string(sHeader))
+		}
 
 		bw, ok := ctx.Writer.(*bodyWriter)
 		if !ok {
@@ -96,18 +107,20 @@ func Dump(cb func(dumpStr string)) gin.HandlerFunc {
 			}
 			switch ct {
 			case gin.MIMEJSON:
-				var mapRes map[string]interface{}
-				if err := json.Unmarshal(bw.bodyCache.Bytes(), &mapRes); err != nil {
+
+				s, err := FormatJsonBytes(bw.bodyCache.Bytes())
+				if err != nil {
 					strB.WriteString(fmt.Sprintf("\nparse bodyCache err \n" + err.Error()))
 					goto End
 				}
 				strB.WriteString("\nResponse-Body:\n")
-				strB.WriteString(strMap(mapRes))
 
+				strB.WriteString(string(s))
 			case gin.MIMEHTML:
 			default:
 			}
 		}
+
 	End:
 		if cb != nil {
 			cb(strB.String())
@@ -115,39 +128,6 @@ func Dump(cb func(dumpStr string)) gin.HandlerFunc {
 			fmt.Print(strB.String())
 		}
 	}
-}
-
-func strHeader(header http.Header) string {
-	var strB strings.Builder
-	strB.WriteString("	{\n")
-	for key, value := range header {
-		strB.WriteString(fmt.Sprintf("			%s : %s\n", key, value))
-	}
-	strB.WriteString("	}\n")
-	return strB.String()
-}
-
-func strMap(m interface{}) string {
-	var strB strings.Builder
-	switch m.(type) {
-	case map[string]interface{}:
-		mInter := m.(map[string]interface{})
-		strB.WriteString("	{\n")
-		for key, value := range mInter {
-			strB.WriteString(fmt.Sprintf("			%s : %s\n", key, value))
-		}
-		strB.WriteString("	}\n")
-		break
-	case map[string][]string:
-		mSl := m.(map[string][]string)
-		strB.WriteString("	{\n")
-		for key, value := range mSl {
-			strB.WriteString(fmt.Sprintf("			%s : %s\n", key, value))
-		}
-		strB.WriteString("	}\n")
-		break
-	}
-	return strB.String()
 }
 
 type bodyWriter struct {

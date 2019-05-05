@@ -53,31 +53,37 @@ func main() {
 ### Output is as follows
 
 ```sh
+=== RUN   TestMIMEPOSTFORM
 [GIN-dump]:
 Request-Header:
-        {
-                        Content-Length : [66]
-                        Content-Type : [application/json;charset=utf-8]
-                        Accept-Encoding : [gzip]
-                        User-Agent : [Go-http-client/1.1]
-        }
-
+{
+    "Content-Type": [
+        "application/x-www-form-urlencoded"
+    ]
+}
 Request-Body:
-        {
-                        sms_code : 1111
-                        telephone : 18322889845
-                        password : lfajkdffsefadfare
-        }
-
+{
+    "bar": [
+        "baz"
+    ],
+    "foo": [
+        "bar",
+        "bar2"
+    ]
+}
 Response-Header:
-        {
-                        Content-Type : [application/json; charset=utf-8]
-        }
-
+{
+    "Content-Type": [
+        "application/json; charset=utf-8"
+    ]
+}
 Response-Body:
-        {
-                        data : sms_code error
-                        ok : %!s(bool=false)
-        }
+{
+    "data": {
+        "addr": "tpkeeper@qq.com",
+        "name": "jfise"
+    },
+    "ok": true
+}
 
 ```
