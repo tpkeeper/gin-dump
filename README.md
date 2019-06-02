@@ -1,8 +1,10 @@
 # gin-dump
 
-Gin middleware/handler to dump header/body of request and response .
+* Gin middleware/handler to dump header/body of request and response .
 
-Very helpful for debugging your applications.
+* Very helpful for debugging your applications.
+
+* More beautiful output than httputil.DumpXXX()
 
 ## Content-type support / todo
 

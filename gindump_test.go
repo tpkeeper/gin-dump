@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"testing"
@@ -66,6 +67,9 @@ func TestMIMEPOSTFORM(t *testing.T) {
 	}))
 
 	router.POST("/dump", func(c *gin.Context) {
+		bts,err:=httputil.DumpRequest(c.Request,true)
+		fmt.Println(string(bts),err)
+
 		c.JSON(http.StatusOK, gin.H{
 			"ok":true,
 			"data":map[string]interface{}{
