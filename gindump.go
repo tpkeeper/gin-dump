@@ -20,7 +20,7 @@ func DumpWithOptions(showReq bool, showResp bool, showBody bool, showHeaders boo
 	headerHiddenFields := []string{}
 	bodyHiddenFields := []string{}
 
-	if showCookies {
+	if !showCookies {
 		headerHiddenFields = append(headerHiddenFields, "cookie")
 	}
 

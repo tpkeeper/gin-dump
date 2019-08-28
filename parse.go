@@ -19,14 +19,7 @@ func FormatJsonBytes(data []byte, hiddenFields []string) ([]byte, error) {
 		return nil, err
 	}
 
-	// case insensitive key deletion
-	for _, hiddenField := range hiddenFields {
-		for k, _ := range v.(map[string]interface{}) {
-			if strings.ToLower(k) == strings.ToLower(hiddenField) {
-				delete(v.(map[string]interface{}), k)
-			}
-		}
-	}
+	v = removeHiddenFields(v, hiddenFields)
 
 	return []byte(format(v, 1)), nil
 }
@@ -126,4 +119,23 @@ func formatArray(a []interface{}, depth int) string {
 
 func generateIndent(depth int) string {
 	return strings.Repeat(" ", Indent*depth)
+}
+
+func removeHiddenFields(v interface{}, hiddenFields []string) interface{} {
+	if _, ok := v.(map[string]interface{}); !ok {
+		return v
+	}
+
+	m := v.(map[string]interface{})
+
+	// case insensitive key deletion
+	for _, hiddenField := range hiddenFields {
+		for k, _ := range m {
+			if strings.ToLower(k) == strings.ToLower(hiddenField) {
+				delete(m, k)
+			}
+		}
+	}
+
+	return m
 }
