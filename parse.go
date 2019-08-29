@@ -13,7 +13,9 @@ var StringMaxLength = 0
 var Newline = "\n"
 var Indent = 4
 
-func FormatJsonBytes(data []byte, hiddenFields []string) ([]byte, error) {
+
+
+func BeautifyJsonBytes(data []byte, hiddenFields []string) ([]byte, error) {
 	var v interface{}
 	if err := json.Unmarshal(data, &v); err != nil {
 		return nil, err
@@ -24,13 +26,13 @@ func FormatJsonBytes(data []byte, hiddenFields []string) ([]byte, error) {
 	return []byte(format(v, 1)), nil
 }
 
-//support
+//transfer v to json bytes
 func FormatToJson(v interface{}, hiddenFields []string) ([]byte, error) {
 	data, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
-	return FormatJsonBytes(data, hiddenFields)
+	return BeautifyJsonBytes(data, hiddenFields)
 }
 
 func format(v interface{}, depth int) string {

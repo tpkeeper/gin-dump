@@ -17,8 +17,8 @@ func Dump(cb func(dumpStr string)) gin.HandlerFunc {
 }
 
 func DumpWithOptions(showReq bool, showResp bool, showBody bool, showHeaders bool, showCookies bool, cb func(dumpStr string)) gin.HandlerFunc {
-	headerHiddenFields := []string{}
-	bodyHiddenFields := []string{}
+	headerHiddenFields := make([]string,0)
+	bodyHiddenFields := make([]string,0)
 
 	if !showCookies {
 		headerHiddenFields = append(headerHiddenFields, "cookie")
@@ -64,7 +64,7 @@ func DumpWithOptions(showReq bool, showResp bool, showBody bool, showHeaders boo
 						goto DumpRes
 					}
 
-					s, err := FormatJsonBytes(bts, bodyHiddenFields)
+					s, err := BeautifyJsonBytes(bts, bodyHiddenFields)
 					if err != nil {
 						strB.WriteString(fmt.Sprintf("\nparse req body err \n" + err.Error()))
 						goto DumpRes
@@ -127,7 +127,7 @@ func DumpWithOptions(showReq bool, showResp bool, showBody bool, showHeaders boo
 				switch ct {
 				case gin.MIMEJSON:
 
-					s, err := FormatJsonBytes(bw.bodyCache.Bytes(), bodyHiddenFields)
+					s, err := BeautifyJsonBytes(bw.bodyCache.Bytes(), bodyHiddenFields)
 					if err != nil {
 						strB.WriteString(fmt.Sprintf("\nparse bodyCache err \n" + err.Error()))
 						goto End

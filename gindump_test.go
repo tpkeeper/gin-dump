@@ -59,6 +59,40 @@ func TestMIMEJSON(t *testing.T) {
 	performRequest(router, "POST", gin.MIMEJSON, "/dump", body)
 
 }
+func TestMIMEJSONWithOption(t *testing.T) {
+	router := gin.New()
+	router.Use(DumpWithOptions(true,false,true,true,false,func(dumpStr string) {
+		fmt.Println(dumpStr)
+	}))
+
+	router.POST("/dump", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"ok":   true,
+			"data": "gin-dump",
+		})
+	})
+
+	type params struct {
+		StartTime string `json:"start_time"`
+		EndTime   string `json:"end_time"`
+	}
+
+	var httpdata = params{
+		StartTime: "2019-03-03",
+		EndTime:   "2019-03-03",
+	}
+	b, err := json.Marshal(httpdata)
+	if err != nil {
+		fmt.Println("json format error:", err)
+		return
+	}
+
+	body := bytes.NewBuffer(b)
+	performRequest(router, "POST", gin.MIMEJSON, "/dump", body)
+
+}
+
+
 
 func TestMIMEPOSTFORM(t *testing.T) {
 	router := gin.New()
