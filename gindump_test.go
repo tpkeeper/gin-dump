@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,15 +11,17 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 func init() {
 	gin.SetMode(gin.TestMode)
 }
 
-func performRequest(r http.Handler, method,contentType string ,path string,body io.Reader) *httptest.ResponseRecorder {
+func performRequest(r http.Handler, method, contentType string, path string, body io.Reader) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, body)
-	req.Header.Set("Content-Type",contentType)
+	req.Header.Set("Content-Type", contentType)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	return w
@@ -34,29 +35,28 @@ func TestMIMEJSON(t *testing.T) {
 
 	router.POST("/dump", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"ok":true,
-			"data":"gin-dump",
+			"ok":   true,
+			"data": "gin-dump",
 		})
 	})
 
-
 	type params struct {
 		StartTime string `json:"start_time"`
-		EndTime string `json:"end_time"`
+		EndTime   string `json:"end_time"`
 	}
 
 	var httpdata = params{
-		StartTime:"2019-03-03",
-		EndTime:"2019-03-03",
+		StartTime: "2019-03-03",
+		EndTime:   "2019-03-03",
 	}
-	b ,err := json.Marshal(httpdata)
+	b, err := json.Marshal(httpdata)
 	if err != nil {
 		fmt.Println("json format error:", err)
 		return
 	}
 
 	body := bytes.NewBuffer(b)
-	performRequest(router, "POST",gin.MIMEJSON ,"/dump",body)
+	performRequest(router, "POST", gin.MIMEJSON, "/dump", body)
 
 }
 
@@ -67,14 +67,14 @@ func TestMIMEPOSTFORM(t *testing.T) {
 	}))
 
 	router.POST("/dump", func(c *gin.Context) {
-		bts,err:=httputil.DumpRequest(c.Request,true)
-		fmt.Println(string(bts),err)
+		bts, err := httputil.DumpRequest(c.Request, true)
+		fmt.Println(string(bts), err)
 
 		c.JSON(http.StatusOK, gin.H{
-			"ok":true,
-			"data":map[string]interface{}{
-				"name":"jfise" ,
-				"addr":"tpkeeper@qq.com",
+			"ok": true,
+			"data": map[string]interface{}{
+				"name": "jfise",
+				"addr": "tpkeeper@qq.com",
 			},
 		})
 	})
@@ -84,8 +84,6 @@ func TestMIMEPOSTFORM(t *testing.T) {
 	form.Add("foo", "bar2")
 	form.Set("bar", "baz")
 
-
-	body:=strings.NewReader(form.Encode())
-	performRequest(router, "POST",gin.MIMEPOSTForm ,"/dump",body)
-
+	body := strings.NewReader(form.Encode())
+	performRequest(router, "POST", gin.MIMEPOSTForm, "/dump", body)
 }

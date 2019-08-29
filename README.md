@@ -42,11 +42,26 @@ import (
 )
 
 func main() {
-	router := gin.Default()
-	
+    router := gin.Default()
+    
+    showReq := true
+    showResp := true
+    showBody := true
+    showHeaders := false
+    showCookies := false
+    
+    router.Use(gindump.Dump(nil))   // prints on stdout
+    // or
 	router.Use(gindump.Dump(func(dumpStr string) {
 	    fmt.Println(dumpStr)
-	}))
+    }))
+    // or
+    router.Use(gindump.DumpWithOptions(showReq, showResp, showBody, showHeaders, showCookies, nil)   // prints on stdout
+    // or
+	router.Use(gindump.DumpWithOptions(showReq, showResp, showBody, showHeaders, showCookies, func(dumpStr string) {
+	    fmt.Println(dumpStr)
+    }))
+
 	//...
 	router.Run()
 }
@@ -55,7 +70,6 @@ func main() {
 ### Output is as follows
 
 ```sh
-=== RUN   TestMIMEPOSTFORM
 [GIN-dump]:
 Request-Header:
 {
@@ -87,5 +101,4 @@ Response-Body:
     },
     "ok": true
 }
-
 ```
