@@ -15,57 +15,74 @@
 * [ ] text/plain
 
 ## Usage
-### Start using it
 
-Download and install it:
-
-```sh
-$ go get github.com/tpkeeper/gin-dump
-```
-
-Import it in your code:
+All:
 
 ```go
-import "github.com/tpkeeper/gin-dump"
-```
-
-### Canonical example:
-
-```go
-package main
-
-import (
-	"fmt"
-	"time"
-	"github.com/gin-gonic/gin"
-	"github.com/tpkeeper/gin-dump"
-)
-
 func main() {
     router := gin.Default()
     
-    showReq := true
-    showResp := true
-    showBody := true
-    showHeaders := false
-    showCookies := false
+    //use Dump() default will print on stdout
+    router.Use(gindump.Dump())
     
-    router.Use(gindump.Dump(nil))   // prints on stdout
-    // or
-	router.Use(gindump.Dump(func(dumpStr string) {
+    //or use DumpWithOptions() with more options    
+    router.Use(gindump.DumpWithOptions(true, true, false, true, false, func(dumpStr string) {
 	    fmt.Println(dumpStr)
     }))
-    // or
-    router.Use(gindump.DumpWithOptions(showReq, showResp, showBody, showHeaders, showCookies, nil)   // prints on stdout
-    // or
-	router.Use(gindump.DumpWithOptions(showReq, showResp, showBody, showHeaders, showCookies, func(dumpStr string) {
-	    fmt.Println(dumpStr)
-    }))
-
-	//...
-	router.Run()
+    
+    router.Post("/",myHandler)
+    
+    ...
+    
+    router.Run()
 }
 ```
+
+Group:
+
+```go
+func main() {
+    router := gin.Default()
+    
+    dumpGroup := router.Group("/group")
+    
+    //use Dump() default will print on stdout
+    dumpGroup.Use(gindump.Dump())
+    
+    //or use DumpWithOptions() with more options    
+    dumpGroup.Use(gindump.DumpWithOptions(true, true, false, true, false, func(dumpStr string) {
+	    fmt.Println(dumpStr)
+    }))
+    
+    dumpGroup.Post("/",myHandler)
+    
+    ...
+    
+    router.Run()
+}
+
+```
+
+EndPoint:
+
+```go
+func main() {
+    router := gin.Default()
+    
+    //use Dump() default will print on stdout
+    router.Post("/",gindump.Dump(),myHandler)
+    
+    //or use DumpWithOptions() with more options    
+    router.Post("/",gindump.DumpWithOptions(true, true, false, true, false, func(dumpStr string) {
+	    fmt.Println(dumpStr)
+    }),myHandler)
+    
+    ...
+    
+    router.Run()
+}
+```
+
 
 ### Output is as follows
 

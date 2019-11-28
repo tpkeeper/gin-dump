@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"net/url"
 	"strings"
 	"testing"
@@ -29,9 +28,7 @@ func performRequest(r http.Handler, method, contentType string, path string, bod
 
 func TestMIMEJSON(t *testing.T) {
 	router := gin.New()
-	router.Use(Dump(func(dumpStr string) {
-		fmt.Println(dumpStr)
-	}))
+	router.Use(Dump())
 
 	router.POST("/dump", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -56,12 +53,13 @@ func TestMIMEJSON(t *testing.T) {
 	}
 
 	body := bytes.NewBuffer(b)
+
 	performRequest(router, "POST", gin.MIMEJSON, "/dump", body)
 
 }
 func TestMIMEJSONWithOption(t *testing.T) {
 	router := gin.New()
-	router.Use(DumpWithOptions(true,false,true,true,false,func(dumpStr string) {
+	router.Use(DumpWithOptions(true, false, true, true, false, func(dumpStr string) {
 		fmt.Println(dumpStr)
 	}))
 
@@ -92,18 +90,11 @@ func TestMIMEJSONWithOption(t *testing.T) {
 
 }
 
-
-
 func TestMIMEPOSTFORM(t *testing.T) {
 	router := gin.New()
-	router.Use(Dump(func(dumpStr string) {
-		fmt.Println(dumpStr)
-	}))
+	router.Use(Dump())
 
 	router.POST("/dump", func(c *gin.Context) {
-		bts, err := httputil.DumpRequest(c.Request, true)
-		fmt.Println(string(bts), err)
-
 		c.JSON(http.StatusOK, gin.H{
 			"ok": true,
 			"data": map[string]interface{}{

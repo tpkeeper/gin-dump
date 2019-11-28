@@ -12,13 +12,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Dump(cb func(dumpStr string)) gin.HandlerFunc {
-	return DumpWithOptions(true, true, true, true, true, cb)
+func Dump() gin.HandlerFunc {
+	return DumpWithOptions(true, true, true, true, true, nil)
 }
 
 func DumpWithOptions(showReq bool, showResp bool, showBody bool, showHeaders bool, showCookies bool, cb func(dumpStr string)) gin.HandlerFunc {
-	headerHiddenFields := make([]string,0)
-	bodyHiddenFields := make([]string,0)
+	headerHiddenFields := make([]string, 0)
+	bodyHiddenFields := make([]string, 0)
 
 	if !showCookies {
 		headerHiddenFields = append(headerHiddenFields, "cookie")
@@ -29,7 +29,7 @@ func DumpWithOptions(showReq bool, showResp bool, showBody bool, showHeaders boo
 
 		if showReq && showHeaders {
 			//dump req header
-			s, err := FormatToJson(ctx.Request.Header, headerHiddenFields)
+			s, err := FormatToBeautifulJson(ctx.Request.Header, headerHiddenFields)
 
 			if err != nil {
 				strB.WriteString(fmt.Sprintf("\nparse req header err \n" + err.Error()))
@@ -80,7 +80,7 @@ func DumpWithOptions(showReq bool, showResp bool, showBody bool, showHeaders boo
 					}
 					val, err := url.ParseQuery(string(bts))
 
-					s, err := FormatToJson(val, bodyHiddenFields)
+					s, err := FormatToBeautifulJson(val, bodyHiddenFields)
 					if err != nil {
 						strB.WriteString(fmt.Sprintf("\nparse req body err \n" + err.Error()))
 						goto DumpRes
@@ -100,7 +100,7 @@ func DumpWithOptions(showReq bool, showResp bool, showBody bool, showHeaders boo
 
 		if showResp && showHeaders {
 			//dump res header
-			sHeader, err := FormatToJson(ctx.Writer.Header(), headerHiddenFields)
+			sHeader, err := FormatToBeautifulJson(ctx.Writer.Header(), headerHiddenFields)
 			if err != nil {
 				strB.WriteString(fmt.Sprintf("\nparse res header err \n" + err.Error()))
 			} else {
@@ -145,7 +145,7 @@ func DumpWithOptions(showReq bool, showResp bool, showBody bool, showHeaders boo
 		if cb != nil {
 			cb(strB.String())
 		} else {
-			fmt.Print(strB.String())
+			fmt.Println(strB.String())
 		}
 	}
 }

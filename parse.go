@@ -13,8 +13,6 @@ var StringMaxLength = 0
 var Newline = "\n"
 var Indent = 4
 
-
-
 func BeautifyJsonBytes(data []byte, hiddenFields []string) ([]byte, error) {
 	var v interface{}
 	if err := json.Unmarshal(data, &v); err != nil {
@@ -26,8 +24,9 @@ func BeautifyJsonBytes(data []byte, hiddenFields []string) ([]byte, error) {
 	return []byte(format(v, 1)), nil
 }
 
-//transfer v to json bytes
-func FormatToJson(v interface{}, hiddenFields []string) ([]byte, error) {
+//transfer v to beautified json bytes
+func FormatToBeautifulJson(v interface{}, hiddenFields []string) ([]byte, error) {
+
 	data, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
@@ -132,7 +131,7 @@ func removeHiddenFields(v interface{}, hiddenFields []string) interface{} {
 
 	// case insensitive key deletion
 	for _, hiddenField := range hiddenFields {
-		for k, _ := range m {
+		for k := range m {
 			if strings.ToLower(k) == strings.ToLower(hiddenField) {
 				delete(m, k)
 			}
